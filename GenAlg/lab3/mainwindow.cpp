@@ -1,7 +1,7 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
 
-MainWindow::MainWindow(std::pair<int, double **> *towns, QWidget *parent) :
+GenAlgWindow::GenAlgWindow(std::pair<int, double **> *towns, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
     m_countsTown(towns->first+1)
@@ -10,15 +10,12 @@ MainWindow::MainWindow(std::pair<int, double **> *towns, QWidget *parent) :
     ui->textEdit->setEnabled(false);
     ui->textEdit_2->setEnabled(false);
 
-    /*m_massPoints = new double* [m];
-    for(int i = 0; i< m; i++){
-        m_massPoints[i] = new double[2];
-        for(int j = 0; j < 2; j++){
-             m_massPoints[i][j] = towns[i][j];
-        }
-    }*/
+    m_start_pause = ui->pushButton;
+    m_stop = ui->pushButton_2;
 
-    m_massPoints = towns->second;
+    m_start_pause->connect(m_start_pause, SIGNAL(clicked(bool)), this, SLOT(changeStateStartPauseButton(bool)));
+
+    setMassPoints(towns->second, towns->first);
     ui->widget->xAxis->setLabel("x");
     ui->widget->yAxis->setLabel("y");
 
@@ -42,30 +39,34 @@ MainWindow::MainWindow(std::pair<int, double **> *towns, QWidget *parent) :
   //  m_plot->graph(0)->setData(xCurPoints,yCurPoints);
 }
 
-MainWindow::~MainWindow()
+GenAlgWindow::~GenAlgWindow()
 {
     delete ui;
+    //delete curve;
+    //delete curvePoints;
     delete []m_massPoints;
 }
-void MainWindow::onDataChanges(QVector<int> vectorPoints, double distance){
 
+void GenAlgWindow::setMassPoints(double **mass, int rows){
+    m_massPoints = new double*[rows];
+    for(int i = 0; i < rows; i++){
+        m_massPoints[i] = new double[2];
+        m_massPoints[i][0] = mass[i][0];
+        m_massPoints[i][1] = mass[i][1];
+    }
+}
 
+void GenAlgWindow::onDataChanges(QVector<int> vectorPoints, double distance){
     QVector<QCPCurveData> curPoints(m_countsTown);
     int index = 0;
 
- //   ui->widget->;
-
     for(auto it = vectorPoints.begin(); it != vectorPoints.end(); it++){
-    //    qDebug() << *it;
         curPoints[index] = QCPCurveData(index,m_massPoints[*it][0],m_massPoints[*it][1]);
         index ++;
-  //      ui->widget->graph(0)->addData(m_massPoints[*it][0],m_massPoints[*it][1]);
-    }
+   }
     curve->data()->set(curPoints, true);
     curvePoints->data()->set(curPoints, true);
 
-    //ui->widget->axisRect()->setupFullAxesBox();
-   // ui->widget->rescaleAxes();
     ui->widget->replot();
 
     xCurDistance.push_back(m_countIter);
@@ -78,4 +79,24 @@ void MainWindow::onDataChanges(QVector<int> vectorPoints, double distance){
     ui->textEdit_2->setText(QVariant(distance).toString());
 
     m_countIter++;
+}
+
+void GenAlgWindow::changeStateStartPauseButton(bool state){
+    if(state){
+        m_start_pause->setText("Пауза");
+    }
+    else{
+        m_start_pause->setText("Продолжить");
+    }
+}
+
+void GenAlgWindow::resetDate(bool state){
+    if(state)
+    {
+        ui->widget->clearPlottables();
+        ui->widget_2->clearPlottables();
+        m_countIter = 0;
+        ui->textEdit->setText(QVariant(0).toString());
+        ui->textEdit_2->setText(QVariant(0).toString());
+    }
 }

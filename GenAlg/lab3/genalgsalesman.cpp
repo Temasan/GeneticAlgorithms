@@ -22,16 +22,23 @@ GenAlgSalesman::GenAlgSalesman(std::pair<int, double **> *towns, int sizePopu, i
         }
    //     qDebug() << "*****";
     }
+    m_mutex = new QMutex();
     createPopulation(m_sizePopu);
 
 }
 void GenAlgSalesman::run(){
+    m_inerations = 0;
     for(int i = 0; i < m_numberIterations; i++){
+        m_mutex->lock();
+        if(m_pauseState != 0)
+            m_mutex->lock();
         crossingover();
         mutate();
         calculateDistance();
         std::sort(m_populationVector.begin(), m_populationVector.end(), SortPopulationByFitnessValue_comp);
         emit dataChanges(m_populationVector[0].gen, m_populationVector[0].distance);
+        m_inerations++;
+        m_mutex->unlock();
     }
 
   //  qDebug() << "Расчет завершен. Лучшая дистанция - " << m_populationVector[0].distance;
@@ -65,7 +72,6 @@ void GenAlgSalesman::createPopulation(int sizePop){
         bufPop.gen.push_back(m_startTown);
         m_populationVector.push_back(bufPop);
     }
-
 }
 
 void GenAlgSalesman::calculateDistance(){
@@ -158,6 +164,22 @@ void GenAlgSalesman::mutate(){
             buf.replace(randTown2, numbTown1);
             m_populationVector[i].gen = buf;
         }
+    }
+}
+
+void GenAlgSalesman::resetAlgoritm(bool){
+    terminate();
+}
+
+void GenAlgSalesman::startPauseAlgoritm(bool state){
+    if(state){
+        m_pauseState = 0;
+        m_mutex->unlock();
+        if(!m_inerations)
+            start();
+    }
+    else{
+        m_pauseState = 1;
     }
 }
 

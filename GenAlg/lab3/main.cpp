@@ -8,10 +8,9 @@
 #include <QUrl>
 #include <QDebug>
 
-
-std::pair<int, double **> *getTownCoors(){
+std::pair<int, double **> getTownCoors(){
     int numberTowns = 0;
-    double **coodrTown = new double*[numberTowns];
+    double **coodrTown = new double*[100];
 
     QFile file(":/coords_town.txt");
     if(file.open(QFile::ReadOnly | QFile::Text)){
@@ -28,8 +27,9 @@ std::pair<int, double **> *getTownCoors(){
             numberTowns ++;
         }
     }
+    file.close();
 
-    return new std::pair<int, double **>(numberTowns,coodrTown);
+    return std::make_pair(numberTowns,coodrTown);
 }
 
 int main(int argc, char *argv[])
@@ -38,17 +38,19 @@ int main(int argc, char *argv[])
     int sizePop = 7000;
     int startTown = 0;
     int numberIterations = 100;
-    std::pair<int, double **> *towns = getTownCoors();
-    GenAlgSalesman gas(towns,sizePop,startTown,numberIterations);
-    MainWindow w(towns);
+    std::pair<int, double **> towns = getTownCoors();
+    GenAlgSalesman gas(&towns,sizePop,startTown,numberIterations);
+    GenAlgWindow w(&towns);
     qRegisterMetaType<QVector<int> >("QVector<int>");
     QObject::connect(&gas, SIGNAL(dataChanges(QVector<int> , double)),
                      &w, SLOT(onDataChanges(QVector<int> , double)));
+
+    QObject::connect(w.getStartPauseButton(), SIGNAL(clicked(bool)),&gas, SLOT(startPauseAlgoritm(bool)));
+    QObject::connect(w.getStopButton(), SIGNAL(clicked(bool)),&gas, SLOT(resetAlgoritm(bool)));
     QObject::connect(&w, SIGNAL(destroyed(QObject*)),
                      &gas, SLOT(onDestroyed(QObject*)));
-
     w.show();
-    gas.start();
+    //gas.start();
 
     return a.exec();
 }
