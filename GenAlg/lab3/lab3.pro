@@ -21,7 +21,8 @@ SOURCES += main.cpp\
     genalgsalesman.cpp
 
 HEADERS  += mainwindow.h \
-    genalgsalesman.h
+    genalgsalesman.h \
+    names.h
 
 FORMS    += mainwindow.ui
 

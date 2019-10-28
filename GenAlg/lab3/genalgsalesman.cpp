@@ -1,28 +1,30 @@
 #include "genalgsalesman.h"
 #include <QDebug>
-GenAlgSalesman::GenAlgSalesman(std::pair<int, double **> *towns, int sizePopu, int startTown, int numberIterations):
-    m_countsTown(towns->first),
+#include <math.h>
+
+GenAlgSalesman::GenAlgSalesman(std::pair<int, TownsCoords  > towns, int sizePopu, int startTown, int numberIterations):
+    m_countsTown(towns.first),
     m_startTown(startTown),
     m_numberIterations(numberIterations),
     m_sizePopu(sizePopu)
 {
-    //m_countsTown = m;
-    //m_startTown = startTown;
     srand(unsigned(time(NULL)));
-    massDistanse = new double* [m_countsTown];
-    for(int i = 0; i< towns->first; i++){
+    for(int i = 0; i< towns.first; i++){
         m_defaultPopulation.push_back(i);
-        massDistanse[i] = new double[m_countsTown];
+        std::vector<double> fDist;
         for(int j = 0; j < m_countsTown; j++){
-            double x1 = towns->second[i][0], x2 = towns->second[j][0];
-            double y1 = towns->second[i][1], y2 = towns->second[j][1];
+            double x1 = towns.second[i][0], x2 = towns.second[j][0];
+            double y1 = towns.second[i][1], y2 = towns.second[j][1];
             double res = std::pow((x2 - x1), 2) + std::pow((y2-y1),2);
-            massDistanse[i][j] = res == 0? 0: std::sqrt(res);
+
+            fDist.push_back(res == 0? 0: std::sqrt(res));
      //       qDebug() << massDistanse[i][j];
         }
+        m_massDistanse.push_back(fDist);
+
    //     qDebug() << "*****";
     }
-    m_mutex = new QMutex();
+    m_mutex.reset(new QMutex());
     createPopulation(m_sizePopu);
 
 }
@@ -45,8 +47,9 @@ void GenAlgSalesman::run(){
 }
 
 GenAlgSalesman::~GenAlgSalesman(){
-   // quit();
-    delete [] massDistanse;
+    m_numberIterations = 0;
+    m_mutex->lock();
+    terminate();
 }
 
 void GenAlgSalesman::createPopulation(int sizePop){
@@ -85,18 +88,18 @@ double GenAlgSalesman::calculateDistance(QVector<int> &vect){
     double distance = 0;
     int lastTown = vect[0];
     for(int i: vect){
-        distance += massDistanse[lastTown][i];
+        distance += m_massDistanse[lastTown][i];
         lastTown = i;
     }
     return distance;
 }
 
 void GenAlgSalesman::crossingover(){
-    QVector<populationStr> popVecBuf = m_populationVector;;
+    //QVector<populationStr> popVecBuf = m_populationVector;
     for(int i = m_sizePopu*m_elitNumb; i < m_sizePopu; i++){
         int randParent = random()%(m_countsTown-2) + 1;
         //int randKrosDist = random();
-        m_populationVector[i].gen = makeChange(popVecBuf[i].gen, popVecBuf[randParent].gen);
+        m_populationVector[i].gen = makeChange(m_populationVector[i].gen, m_populationVector[randParent].gen);
     }
 }
 

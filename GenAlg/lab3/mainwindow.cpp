@@ -1,10 +1,11 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
+#include "names.h"
 
-GenAlgWindow::GenAlgWindow(std::pair<int, double **> *towns, QWidget *parent) :
+GenAlgWindow::GenAlgWindow(std::pair<int, TownsCoords> towns, QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow),
-    m_countsTown(towns->first+1)
+    m_countsTown(towns.first+1)
 {
     ui->setupUi(this);
     ui->textEdit->setEnabled(false);
@@ -15,7 +16,7 @@ GenAlgWindow::GenAlgWindow(std::pair<int, double **> *towns, QWidget *parent) :
 
     m_start_pause->connect(m_start_pause, SIGNAL(clicked(bool)), this, SLOT(changeStateStartPauseButton(bool)));
 
-    setMassPoints(towns->second, towns->first);
+    setMassPoints(towns.second, towns.first);
     ui->widget->xAxis->setLabel("x");
     ui->widget->yAxis->setLabel("y");
 
@@ -42,17 +43,12 @@ GenAlgWindow::GenAlgWindow(std::pair<int, double **> *towns, QWidget *parent) :
 GenAlgWindow::~GenAlgWindow()
 {
     delete ui;
-    //delete curve;
-    //delete curvePoints;
-    delete []m_massPoints;
 }
 
-void GenAlgWindow::setMassPoints(double **mass, int rows){
-    m_massPoints = new double*[rows];
+void GenAlgWindow::setMassPoints(TownsMass mass, int rows){
+    //m_massPoints = new double*[rows];
     for(int i = 0; i < rows; i++){
-        m_massPoints[i] = new double[2];
-        m_massPoints[i][0] = mass[i][0];
-        m_massPoints[i][1] = mass[i][1];
+        m_massPoints.push_back({mass[i][0],mass[i][1]});
     }
 }
 
@@ -76,7 +72,7 @@ void GenAlgWindow::onDataChanges(QVector<int> vectorPoints, double distance){
     ui->widget_2->replot();
 
     ui->textEdit->setText(QVariant(m_countIter).toString());
-    ui->textEdit_2->setText(QVariant(distance).toString());
+    ui->textEdit_2->setText(QVariant(std::round(distance*100)/100).toString());
 
     m_countIter++;
 }

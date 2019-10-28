@@ -6,6 +6,8 @@
 #include <QThread>
 #include <QPair>
 #include <QMutex>
+#include <memory>
+#include "names.h"
 
 struct populationStr{
     double distance;
@@ -16,7 +18,7 @@ class GenAlgSalesman : public QThread
 {
     Q_OBJECT
 public:
-    GenAlgSalesman(std::pair<int, double **> *towns, int sizePopu, int startTown, int numberIterations);
+    GenAlgSalesman(std::pair<int, TownsCoords> towns, int sizePopu, int startTown, int numberIterations);
     void run () override;
 
     ~GenAlgSalesman();
@@ -34,18 +36,33 @@ signals:
     void dataChanges(QVector<int> vectorPoints, double distance);
 private:
     static bool SortPopulationByFitnessValue_comp(populationStr x, populationStr y){return (x.distance < y.distance);}
+    /*!
+     * \brief создать набор популяций
+     */
     void createPopulation(int sizePop);
+    /*!
+     * \brief расчитать дистанцию
+     */
     void calculateDistance();
     double calculateDistance(QVector<int> &vect);
+    /*!
+     * \brief произвести кроссинговер для генов m_populationVector
+     */
     void crossingover();
+    /*!
+     * \brief Вернуть новый ген по двум переданным. Производит спаривание генов, в результате остаются два.
+     * Возвращается наиболее валидный
+     */
     QVector<int> makeChange(QVector<int> child, QVector<int> parent);
+    /*!
+     * \brief произвести мутации популяциям
+     */
     void mutate();
-
-
+private:
     QVector<int> m_defaultPopulation;
     QVector<populationStr> m_populationVector;
-    QMutex *m_mutex;
-    double **massDistanse = nullptr;
+    std::unique_ptr<QMutex> m_mutex;
+    TownsMass m_massDistanse;
     int m_countsTown;
     int m_startTown;
     double m_elitNumb = 0.00001;

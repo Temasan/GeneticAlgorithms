@@ -5,6 +5,7 @@
 #include <qcustomplot.h>
 #include <QVector>
 #include <QPushButton>
+#include "names.h"
 
 namespace Ui {
 class MainWindow;
@@ -15,7 +16,7 @@ class GenAlgWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit GenAlgWindow(std::pair<int, double **> *towns, QWidget *parent = 0);
+    explicit GenAlgWindow(std::pair<int, TownsCoords> towns, QWidget *parent = 0);
     QPushButton *getStartPauseButton(){
         return m_start_pause;
     }
@@ -28,13 +29,13 @@ public slots:
     void onDataChanges(QVector<int> vectorPoints, double distance);
 
 private:
-    void setMassPoints(double **mass, int rows);
+    void setMassPoints(TownsMass mass, int rows);
     Ui::MainWindow *ui;
     QPushButton *m_start_pause;
     QPushButton *m_stop;
 
     int m_countIter = 0;
-    double **m_massPoints = nullptr;
+    TownsMass m_massPoints;
     int m_countsTown;
     QVector<double> yCurDistance;
     QVector<double> xCurDistance;
